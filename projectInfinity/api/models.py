@@ -19,7 +19,7 @@ def GenerateQuestions(passage):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     #generate the questions first
-    model.load_state_dict(torch.load(r"C:\Users\hengkai\Documents\NUS\y1 sem 2\Orbital\Orbital-24-Infinity-AI\model_state.pt"))
+    model.load_state_dict(torch.load("model_state.pt location"))
     model.to(device)
     model.eval()
 
@@ -37,7 +37,7 @@ def GenerateQuestions(passage):
         start = end
     
     #then we generate the options and answers for the question
-    model.load_state_dict(torch.load(r"C:\Users\hengkai\Documents\NUS\y1 sem 2\Orbital\Orbital-24-Infinity-AI\options_model_state.pt"))
+    model.load_state_dict(torch.load("options_model_state.pt location"))
     model.to(device)
     model.eval()
 
