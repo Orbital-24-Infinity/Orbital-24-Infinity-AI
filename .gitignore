@@ -1,2 +1,6 @@
 model_state.pt
 options_model_state.pt
+*.env
+bin/
+lib/
+*.sqlite3
