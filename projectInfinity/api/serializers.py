@@ -5,3 +5,8 @@ class QuizSerializer(serializers.ModelSerializer):
     class Meta:
         model = Quiz
         fields = ('id', 'quizName' , 'passage', 'questions')
+
+class QuestionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Quiz
+        fields = ('questions', )

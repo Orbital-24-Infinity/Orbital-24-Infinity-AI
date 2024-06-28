@@ -19,7 +19,7 @@ def GenerateQuestions(passage):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     #generate the questions first
-    model.load_state_dict(torch.load("location of model_state.py"))
+    model.load_state_dict(torch.load(r"C:\Users\hengkai\Documents\NUS\y1 sem 2\Orbital\Orbital-24-Infinity-AI\model_state.pt"))
     model.to(device)
     model.eval()
 
@@ -37,7 +37,7 @@ def GenerateQuestions(passage):
         start = end
     
     #then we generate the options and answers for the question
-    model.load_state_dict(torch.load("location of options_model_state.py"))
+    model.load_state_dict(torch.load(r"C:\Users\hengkai\Documents\NUS\y1 sem 2\Orbital\Orbital-24-Infinity-AI\options_model_state.pt"))
     model.to(device)
     model.eval()
 
@@ -45,9 +45,10 @@ def GenerateQuestions(passage):
     output = ""
 
     for i in range(10):
-        if question[i] == "repeat question":
-            continue
+        start = end
         end = int((i + 1) / 10 * length)
+        if questions[i] == "repeat question":
+            continue
         optionsPrompt = f"passage: {passage[start:end]} question: {question[i]}"
         options = RunInference(optionsPrompt, tokenizer, model, device)
         output += f"{questions[i]}\n{options}\n"
