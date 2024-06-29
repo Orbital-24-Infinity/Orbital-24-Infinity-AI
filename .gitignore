@@ -4,3 +4,4 @@ options_model_state.pt
 bin/
 lib/
 *.sqlite3
+.vercel

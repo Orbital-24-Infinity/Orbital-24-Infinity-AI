@@ -1,8 +1,12 @@
 # Orbital-24-Infinity-AI
 
 ## RunModel
-RunModel is used to generate multiple choice questions  
+RunModel is used to test the fine tuned weights  
 model weights can be downloaded at https://drive.google.com/drive/folders/1RkVwqAxOW6EiE8vG74a-uc2CuAg51I2d?usp=drive_link
 
-## projectinfinity
-project infinity is the django based api that can be used to access the model
+## api
+To configure the api add a .env file with the variables and add a link to the database.
+database should be called "POSTGRES_URL"
+generally follow the frontend's format for the .env file (Jun Kang knows better)
+
+![alt text](https://github.com/neohengkai/Orbital-24-Infinity-AI-dev/blob/main/InfinityGuy.jpg)

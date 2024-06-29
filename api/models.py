@@ -19,7 +19,7 @@ def GenerateQuestions(passage):
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     #generate the questions first
-    model.load_state_dict(torch.load("model_state.pt location"))
+    model.load_state_dict(torch.load("model_state.pt"))
     model.to(device)
     model.eval()
 
@@ -37,7 +37,7 @@ def GenerateQuestions(passage):
         start = end
     
     #then we generate the options and answers for the question
-    model.load_state_dict(torch.load("options_model_state.pt location"))
+    model.load_state_dict(torch.load("options_model_state.pt"))
     model.to(device)
     model.eval()
 
@@ -51,7 +51,7 @@ def GenerateQuestions(passage):
             continue
         optionsPrompt = f"passage: {passage[start:end]} question: {question[i]}"
         options = RunInference(optionsPrompt, tokenizer, model, device)
-        output += f"{questions[i]}\n{options}\n"
+        output += f"{questions[i]}#{options}#"
 
     return output
 
@@ -62,6 +62,5 @@ class Quiz(models.Model):
     questions = models.CharField(max_length=4096, blank=True)
 
     def save(self, *args, **kwargs):
-        if not self.questions:
-            self.questions = GenerateQuestions(self.passage)
+        self.questions = GenerateQuestions(self.passage)
         super().save(*args, **kwargs)
