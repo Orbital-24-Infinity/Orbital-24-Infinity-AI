@@ -11,7 +11,7 @@ generally follow the frontend's format for the .env file (Jun Kang knows better)
 
 ![alt text](https://github.com/neohengkai/Orbital-24-Infinity-AI-dev/blob/main/InfinityGuy.jpg)
 
-##Usage
+## Usage
 to launch the api, run these in order
 
 ```bash
