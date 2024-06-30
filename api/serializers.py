@@ -27,3 +27,12 @@ class TopicSerializer(serializers.ModelSerializer):
     class Meta:
         model = Topic
         fields = ('topicid', 'title', 'maxquestions', 'userid', 'lastmodified', 'isgenerating', 'data', 'questions', 'files')
+
+
+class QuestionGenSerializer(serializers.ModelSerializer):
+    questions = QuestionSerializer(many=True, read_only=True, source='question_set')
+    files = FileSerializer(many=True, read_only=True, source='file_set')
+    
+    class Meta:
+        model = Topic
+        fields = ('topicid', 'questions', 'files')

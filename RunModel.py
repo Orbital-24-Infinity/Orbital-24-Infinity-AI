@@ -59,7 +59,7 @@ def GenerateQuestions(passage):
         correctOption = ord(options[-1]) - 65
         for optionsIndex in range(1, len(options)):
             if options[optionsIndex] == '&' or options[optionsIndex] == '#':
-                option = options[startOfOption:optionsIndex-1]
+                option = options[startOfOption:optionsIndex]
                 optionsDic[option] = currentOption == correctOption
                 currentOption += 1
                 startOfOption = optionsIndex + 1

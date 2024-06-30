@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework import generics
-from .serializers import TopicSerializer, QuestionSerializer
+from .serializers import TopicSerializer, QuestionSerializer, QuestionGenSerializer
 from .models import Topic, Question, Questionoptions, File
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -73,8 +73,8 @@ def TopicDetail(request, id):
 def QuestionDetail(request, id):
     if request.method == 'GET':
         try:
-            quiz = Question.objects.get(pk=id)
-        except Question.DoesNotExist:
+            quiz = Topic.objects.get(pk=id)
+        except Topic.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = QuestionSerializer(quiz)
@@ -82,6 +82,37 @@ def QuestionDetail(request, id):
     
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
+@api_view(['POST'])
+def Generate(request, id):
+    if request.method == 'POST':
+        try:
+            topic = Topic.objects.get(pk=id)
+        except Topic.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = QuestionGenSerializer(topic, data=request.data)
+        if serializer.is_valid():
+            topic = serializer.save()
+
+            passage = topic.data
+            generatedQuestions = GenerateQuestions(passage)
+
+            for questionText, options in generatedQuestions.items():
+                question = Question.objects.create(
+                    question=questionText,
+                    topicid=topic
+                )
+
+                for optionText, check in options.items():
+                    Questionoptions.objects.create(
+                        option=optionText,
+                        correct=check,
+                        questionid=question
+                    )
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
+
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
 #functions for generating questions
 
@@ -141,7 +172,7 @@ def GenerateQuestions(passage):
         correctOption = ord(options[-1]) - 65
         for optionsIndex in range(1, len(options)):
             if options[optionsIndex] == '&' or options[optionsIndex] == '#':
-                option = options[startOfOption:optionsIndex-1]
+                option = options[startOfOption:optionsIndex]
                 optionsDic[option] = currentOption == correctOption
                 currentOption += 1
                 startOfOption = optionsIndex + 1
