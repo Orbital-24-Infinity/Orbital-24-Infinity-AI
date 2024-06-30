@@ -10,3 +10,12 @@ database should be called "POSTGRES_URL"
 generally follow the frontend's format for the .env file (Jun Kang knows better)
 
 ![alt text](https://github.com/neohengkai/Orbital-24-Infinity-AI-dev/blob/main/InfinityGuy.jpg)
+
+##Usage
+to launch the api, run these in order
+
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+```
