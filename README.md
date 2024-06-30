@@ -16,6 +16,8 @@ to launch the api, run these in order
 
 ```bash
 python manage.py makemigrations
-python manage.py migrate
+python manage.py migrate --fake
 python manage.py runserver
 ```
+note that it is safe to do --fake here as all the data tables should have been initialized by the frontend
+please do check that it has been done before u perform the migrations
