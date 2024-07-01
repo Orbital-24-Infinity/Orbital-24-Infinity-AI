@@ -46,8 +46,8 @@ class Topic(models.Model):
     title = models.TextField()
     maxquestions = models.IntegerField(db_column='maxQuestions')  # Field name made lowercase.
     userid = models.ForeignKey('User', models.DO_NOTHING, db_column='userID')  # Field name made lowercase.
-    lastmodified = models.DateTimeField(db_column='lastModified')  # Field name made lowercase.
-    isgenerating = models.BooleanField(db_column='isGenerating')  # Field name made lowercase.
+    lastmodified = models.DateTimeField(db_column='lastModified', auto_now=True)  # Field name made lowercase.
+    isgenerating = models.BooleanField(db_column='isGenerating', default=False)  # Field name made lowercase.
     data = models.TextField()
 
     class Meta:

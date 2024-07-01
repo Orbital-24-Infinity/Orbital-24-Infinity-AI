@@ -109,6 +109,10 @@ def Generate(request, id):
                         correct=check,
                         questionid=question
                     )
+            
+            topic.isgenerating = False
+            topic.save()
+            
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
 
@@ -145,6 +149,7 @@ def GenerateQuestions(passage):
         end = int((i + 1) / 10 * length)
         question = RunInference(passage[start:end], tokenizer, model, device)
         if question not in questions:
+
             questions.append(question)
         else:
             questions.append("repeat question")

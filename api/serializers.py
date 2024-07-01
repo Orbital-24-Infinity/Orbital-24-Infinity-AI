@@ -35,4 +35,4 @@ class QuestionGenSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Topic
-        fields = ('topicid', 'questions', 'files')
+        fields = ('topicid', 'isgenerating', 'lastmodified', 'questions', 'files')
