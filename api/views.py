@@ -73,8 +73,8 @@ def TopicDetail(request, id):
 def QuestionDetail(request, id):
     if request.method == 'GET':
         try:
-            quiz = Topic.objects.get(pk=id)
-        except Topic.DoesNotExist:
+            quiz = Question.objects.get(pk=id)
+        except Question.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
         
         serializer = QuestionSerializer(quiz)

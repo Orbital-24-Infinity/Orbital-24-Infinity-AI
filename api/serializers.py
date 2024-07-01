@@ -13,7 +13,7 @@ class FileSerializer(serializers.ModelSerializer):
         fields = ('fileid', 'name' , 'path', 'topicid')
 
 class QuestionSerializer(serializers.ModelSerializer):
-    options = QuestionoptionsSerializer(many=True, read_only=True, source='questionoption_set')
+    options = QuestionoptionsSerializer(many=True, read_only=True, source='questionoptions_set')
 
     class Meta:
         model = Question
