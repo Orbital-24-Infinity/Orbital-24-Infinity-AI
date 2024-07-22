@@ -172,10 +172,10 @@ def GenerateQuestions(passage):
         options = RunInference(optionsPrompt, tokenizer, model, device)
 
         optionsDic = {}
-        startOfOption = 1
+        startOfOption = 0
         currentOption = 0
         correctOption = ord(options[-1]) - 65
-        for optionsIndex in range(1, len(options)):
+        for optionsIndex in range(len(options)):
             if options[optionsIndex] == '&' or options[optionsIndex] == '#':
                 option = options[startOfOption:optionsIndex]
                 optionsDic[option] = currentOption == correctOption
