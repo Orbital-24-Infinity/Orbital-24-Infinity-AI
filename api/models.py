@@ -11,21 +11,23 @@ from django.db import models
 class File(models.Model):
     fileid = models.AutoField(primary_key=True)
     name = models.TextField()
-    path = models.TextField(unique=True)
+    data = models.TextField()
     topicid = models.ForeignKey('Topic', models.DO_NOTHING, db_column='topicID')  # Field name made lowercase.
 
     class Meta:
+        managed = False
         db_table = 'File'
 
 
 class Question(models.Model):
     questionid = models.AutoField(primary_key=True)
     question = models.TextField()
-    mrq = models.BooleanField(default=False)
-    openended = models.BooleanField(db_column='openEnded', default=False)  # Field name made lowercase.
-    marked = models.BooleanField(default=False)
-    selected = models.IntegerField(default=-1)
+    mrq = models.BooleanField()
+    openended = models.BooleanField(db_column='openEnded')  # Field name made lowercase.
+    marked = models.BooleanField()
+    selected = models.IntegerField()
     topicid = models.ForeignKey('Topic', models.DO_NOTHING, db_column='topicID')  # Field name made lowercase.
+    refdata = models.TextField(db_column='refData')  # Field name made lowercase.
 
     class Meta:
         db_table = 'Question'
@@ -46,8 +48,8 @@ class Topic(models.Model):
     title = models.TextField()
     maxquestions = models.IntegerField(db_column='maxQuestions')  # Field name made lowercase.
     userid = models.ForeignKey('User', models.DO_NOTHING, db_column='userID')  # Field name made lowercase.
-    lastmodified = models.DateTimeField(db_column='lastModified', auto_now=True)  # Field name made lowercase.
-    isgenerating = models.BooleanField(db_column='isGenerating', default=False)  # Field name made lowercase.
+    lastmodified = models.DateTimeField(db_column='lastModified')  # Field name made lowercase.
+    isgenerating = models.BooleanField(db_column='isGenerating')  # Field name made lowercase.
     data = models.TextField()
 
     class Meta:
@@ -62,5 +64,4 @@ class User(models.Model):
     authvalidity = models.DateTimeField(db_column='authValidity')  # Field name made lowercase.
 
     class Meta:
-        managed = False
         db_table = 'User'
