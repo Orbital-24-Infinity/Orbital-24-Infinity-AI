@@ -6,8 +6,10 @@ from .models import Topic, Question, Questionoptions, File
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
+
 import torch
 from transformers import T5Tokenizer, T5ForConditionalGeneration
+import random
 
 # Create your views here.
 
@@ -28,7 +30,8 @@ def Topics(request):
 
             for questionText, options in generatedQuestions.items():
                 question = Question.objects.create(
-                    question=questionText,
+                    question=questionText[0],
+                    refdata=questionText[1],
                     topicid=topic
                 )
 
@@ -95,11 +98,12 @@ def Generate(request, id):
             topic = serializer.save()
 
             passage = topic.data
-            generatedQuestions = GenerateQuestions(passage)
+            generatedQuestions = GenerateMore(passage)
 
             for questionText, options in generatedQuestions.items():
                 question = Question.objects.create(
-                    question=questionText,
+                    question=questionText[0],
+                    refdata=questionText[1],
                     topicid=topic
                 )
 
@@ -113,7 +117,7 @@ def Generate(request, id):
             topic.isgenerating = False
             topic.save()
             
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)    
 
     return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
@@ -132,8 +136,8 @@ def RunInference(passage, tokenizer, model, device):
     return generated_text
 
 def GenerateQuestions(passage):
-    tokenizer = T5Tokenizer.from_pretrained("t5-base")
-    model = T5ForConditionalGeneration.from_pretrained("t5-base")
+    tokenizer = T5Tokenizer.from_pretrained("t5-large")
+    model = T5ForConditionalGeneration.from_pretrained("t5-large")
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
     #generate the questions first
@@ -144,16 +148,27 @@ def GenerateQuestions(passage):
     length = len(passage)
     start, end = 0, 0
     questions = []
-
-    for i in range(10):
-        end = int((i + 1) / 10 * length)
-        question = RunInference(passage[start:end], tokenizer, model, device)
-        if question not in questions:
-
-            questions.append(question)
-        else:
-            questions.append("repeat question")
-        start = end
+    fullstops = 0
+    for i in range(length // 2):
+        if passage[i] == ".":
+            fullstops += 1
+            
+    if fullstops > 3:
+        for i in range(10):
+            end = int((i + 1) / 10 * length)
+            while end < length and passage[end] != ".":
+                end += 1
+            if end < length and passage[end] == ".":
+                end += 1
+            question = RunInference(passage[start:end], tokenizer, model, device)
+            questions.append((question, passage[start : end]))
+            start = end
+    else:
+        for i in range(10):
+            end = int((i + 1) / 10 * length)
+            question = RunInference(passage[start:end], tokenizer, model, device)
+            questions.append((question, passage[start : end]))
+            start = end
     
     #then we generate the options and answers for the question
     model.load_state_dict(torch.load("options_model_state.pt"))
@@ -183,5 +198,79 @@ def GenerateQuestions(passage):
                 startOfOption = optionsIndex + 1
                 
         output[questions[i]] = optionsDic
+
+    return output
+
+
+def GenerateMore(passage):
+    tokenizer = T5Tokenizer.from_pretrained("t5-large")
+    model = T5ForConditionalGeneration.from_pretrained("t5-large")
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+
+    #generate the questions first
+    model.load_state_dict(torch.load("model_state.pt"))
+    model.to(device)
+    model.eval()
+
+    length = len(passage)
+    start, end = 0, 0
+    questions = []
+
+    fullstops = 0
+    for i in range(length // 2):
+        if passage[i] == ".":
+            fullstops += 1
+
+    if fullstops > 3:
+        while len(questions) < 10:
+            mid = random.randint(0, length - 1)
+            start, end = mid, mid
+
+            while start > 0 and passage[start] != ".":
+                start -= 1
+            if start != 0:
+                start += 2
+            while end < length and passage[end] != ".":
+                end += 1
+            if end < length and passage[end] != ".":
+                end += 1
+            end += 1
+            
+            question = RunInference(passage[start:end], tokenizer, model, device)
+            if not any(q[0] == question for q in questions):
+                questions.append((question, passage[start : end]))
+    else:
+        while len(questions) < 10:
+            start = random.randint(0, length - 1)
+            end = start
+            while end < length and end - start < length // 5:
+                end += 1
+
+            question = RunInference(passage[start:end], tokenizer, model, device)
+            if not any(q[0] == question for q in questions):
+                questions.append((question, passage[start:end]))
+                
+    model.load_state_dict(torch.load("options_model_state.pt"))
+    model.to(device)
+    model.eval()
+
+    output = {}
+
+    for question in questions:
+        optionsPrompt = f"passage: {question[1]} question: {question[0]}"
+        options = RunInference(optionsPrompt, tokenizer, model, device)
+
+        optionsDic = {}
+        startOfOption = 0
+        currentOption = 0
+        correctOption = ord(options[-1]) - 65
+        for optionsIndex in range(len(options)):
+            if options[optionsIndex] == '&' or options[optionsIndex] == '#':
+                option = options[startOfOption:optionsIndex]
+                optionsDic[option] = currentOption == correctOption
+                currentOption += 1
+                startOfOption = optionsIndex + 1
+                
+        output[question] = optionsDic
 
     return output

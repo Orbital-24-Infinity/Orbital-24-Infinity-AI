@@ -22,12 +22,12 @@ class File(models.Model):
 class Question(models.Model):
     questionid = models.AutoField(primary_key=True)
     question = models.TextField()
-    mrq = models.BooleanField()
-    openended = models.BooleanField(db_column='openEnded')  # Field name made lowercase.
-    marked = models.BooleanField()
-    selected = models.IntegerField()
+    mrq = models.BooleanField(default=False)
+    openended = models.BooleanField(db_column='openEnded', default=False)  # Field name made lowercase.
+    marked = models.BooleanField(default=False)
+    selected = models.IntegerField(default=-1)
     topicid = models.ForeignKey('Topic', models.DO_NOTHING, db_column='topicID')  # Field name made lowercase.
-    refdata = models.TextField(db_column='refData')  # Field name made lowercase.
+    refdata = models.TextField(db_column='refData', default="")  # Field name made lowercase.
 
     class Meta:
         db_table = 'Question'
@@ -46,10 +46,10 @@ class Questionoptions(models.Model):
 class Topic(models.Model):
     topicid = models.AutoField(primary_key=True)
     title = models.TextField()
-    maxquestions = models.IntegerField(db_column='maxQuestions')  # Field name made lowercase.
-    userid = models.ForeignKey('User', models.DO_NOTHING, db_column='userID')  # Field name made lowercase.
-    lastmodified = models.DateTimeField(db_column='lastModified')  # Field name made lowercase.
-    isgenerating = models.BooleanField(db_column='isGenerating')  # Field name made lowercase.
+    maxquestions = models.IntegerField(db_column='maxQuestions', default=0)  # Field name made lowercase.
+    userid = models.ForeignKey('User', models.DO_NOTHING, db_column='userID', default=0)  # Field name made lowercase.
+    lastmodified = models.DateTimeField(db_column='lastModified', auto_now=True)  # Field name made lowercase.
+    isgenerating = models.BooleanField(db_column='isGenerating', default=False)  # Field name made lowercase.
     data = models.TextField()
 
     class Meta:
