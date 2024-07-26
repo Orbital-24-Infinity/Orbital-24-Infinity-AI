@@ -97,6 +97,8 @@ def Generate(request, id):
         if serializer.is_valid():
             topic = serializer.save()
 
+            topic.isgenerating = True
+
             passage = topic.data
             files = File.objects.filter(topicid=topic)
             for file in files:
@@ -117,6 +119,7 @@ def Generate(request, id):
                         questionid=question
                     )
             
+            topic.maxquestions += 10
             topic.isgenerating = False
             topic.save()
             
