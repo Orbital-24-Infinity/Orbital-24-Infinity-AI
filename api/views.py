@@ -95,9 +95,10 @@ def Generate(request, id):
         
         serializer = QuestionGenSerializer(topic, data=request.data)
         if serializer.is_valid():
-            topic = serializer.save()
-
             topic.isgenerating = True
+            topic.save()
+
+            topic = serializer.save()
 
             passage = topic.data
             files = File.objects.filter(topicid=topic)
@@ -213,8 +214,9 @@ def GenerateMore(passage):
     model = T5ForConditionalGeneration.from_pretrained("t5-large")
     device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
 
+
     #generate the questions first
-    model.load_state_dict(torch.load("model_state.pt"))
+    model.load_state_dict(torch.load("model_state.pt", map_location=torch.device(device)))
     model.to(device)
     model.eval()
 
@@ -256,7 +258,7 @@ def GenerateMore(passage):
             if not any(q[0] == question for q in questions):
                 questions.append((question, passage[start:end]))
                 
-    model.load_state_dict(torch.load("options_model_state.pt"))
+    model.load_state_dict(torch.load("options_model_state.pt", map_location=torch.device(device)))
     model.to(device)
     model.eval()
 
