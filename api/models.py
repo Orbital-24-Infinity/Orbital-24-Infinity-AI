@@ -11,11 +11,10 @@ from django.db import models
 class File(models.Model):
     fileid = models.AutoField(primary_key=True)
     name = models.TextField()
-    data = models.TextField()
+    data = models.TextField(default="")
     topicid = models.ForeignKey('Topic', models.DO_NOTHING, db_column='topicID')  # Field name made lowercase.
 
     class Meta:
-        managed = False
         db_table = 'File'
 
 
@@ -59,9 +58,9 @@ class Topic(models.Model):
 class User(models.Model):
     userid = models.AutoField(primary_key=True)
     email = models.TextField(unique=True)
-    lastlogin = models.DateTimeField(db_column='lastLogin')  # Field name made lowercase.
+    lastlogin = models.DateTimeField(db_column='lastLogin', auto_now=True)  # Field name made lowercase.
     authkey = models.TextField(db_column='authKey')  # Field name made lowercase.
-    authvalidity = models.DateTimeField(db_column='authValidity')  # Field name made lowercase.
+    authvalidity = models.DateTimeField(db_column='authValidity', auto_now=True)  # Field name made lowercase.
 
     class Meta:
         db_table = 'User'

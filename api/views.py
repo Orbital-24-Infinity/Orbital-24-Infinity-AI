@@ -98,6 +98,9 @@ def Generate(request, id):
             topic = serializer.save()
 
             passage = topic.data
+            files = File.objects.filter(topicid=topic)
+            for file in files:
+                passage += file.data
             generatedQuestions = GenerateMore(passage)
 
             for questionText, options in generatedQuestions.items():
