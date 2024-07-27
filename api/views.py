@@ -113,14 +113,17 @@ def Generate(request, id):
                     topicid=topic
                 )
 
-                for optionText, check in options.items():
+                optionList = list(options.items())
+                random.shuffle(optionList)
+                
+                for optionText, check in optionList:
                     Questionoptions.objects.create(
                         option=optionText,
                         correct=check,
                         questionid=question
                     )
             
-            topic.maxquestions += 10
+            topic.maxquestions += len(generatedQuestions)
             topic.isgenerating = False
             topic.save()
             
@@ -243,6 +246,32 @@ def GenerateMore(passage):
             if end < length and passage[end] != ".":
                 end += 1
             end += 1
+
+            if end - start < length // 10:
+                if end + 1 >= length:
+                    start -= 1
+                    while start > 0 and passage[start] != ".":
+                        start -= 1
+                    if start != 0:
+                        start += 2
+                else:
+                    while end < length and passage[end] != ".":
+                        end += 1
+                    if end < length and passage[end] != ".":
+                        end += 1
+            
+            if end - start < length // 10:
+                if end + 1 >= length:
+                    start -= 1
+                    while start > 0 and passage[start] != ".":
+                        start -= 1
+                    if start != 0:
+                        start += 2
+                else:
+                    while end < length and passage[end] != ".":
+                        end += 1
+                    if end < length and passage[end] != ".":
+                        end += 1
             
             question = RunInference(passage[start:end], tokenizer, model, device)
             if not any(q[0] == question for q in questions):
@@ -275,10 +304,10 @@ def GenerateMore(passage):
         for optionsIndex in range(len(options)):
             if options[optionsIndex] == '&' or options[optionsIndex] == '#':
                 option = options[startOfOption:optionsIndex]
-                optionsDic[option] = currentOption == correctOption
+                optionsDic[option[3:]] = currentOption == correctOption
                 currentOption += 1
                 startOfOption = optionsIndex + 1
-                
-        output[question] = optionsDic
+        if len(optionsDic) == 4:       
+            output[question] = optionsDic
 
     return output
