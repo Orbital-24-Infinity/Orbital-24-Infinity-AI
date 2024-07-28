@@ -112,7 +112,7 @@ def Generate(request, id):
             generatedQuestions = GenerateMore(passage)
             
             try:
-                temp = Topic.objects.get(pk=id)
+                Topic.objects.get(pk=id)
             except Topic.DoesNotExist:
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
