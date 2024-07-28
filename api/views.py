@@ -236,10 +236,11 @@ def GenerateMore(passage):
     while len(questions) < 10:
         index = random.randint(0, len(sentences) - 1)
         context = sentences[index]
-        while index + 1 < len(sentences) and len(context) < min(length // 20, 250):
-            index += 1
+        index += 1
+        while index < len(sentences) and len(context) < min(length // 20, 250):
             context += " "
             context += sentences[index]
+            index += 1
         
         question = RunInference(context, tokenizer, model, device)
         if not any(q[0] == question for q in questions):
