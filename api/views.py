@@ -10,6 +10,11 @@ from rest_framework import status
 import torch
 from transformers import T5Tokenizer, T5ForConditionalGeneration
 import random
+import re
+import nltk
+nltk.download('punkt')
+from nltk.tokenize import sent_tokenize, word_tokenize
+
 
 # Create your views here.
 
@@ -223,69 +228,83 @@ def GenerateMore(passage):
     model.to(device)
     model.eval()
 
+    passage = CleanText(passage)
+    sentences = SplitText(passage)
     length = len(passage)
-    start, end = 0, 0
     questions = []
 
-    fullstops = 0
-    for i in range(length // 2):
-        if passage[i] == ".":
-            fullstops += 1
+    while len(questions) < 10:
+        index = random.randint(0, len(sentences) - 1)
+        context = sentences[index]
+        while index + 1 < len(sentences) and len(context) < min(length // 20, 250):
+            index += 1
+            context += " "
+            context += sentences[index]
+        
+        question = RunInference(context, tokenizer, model, device)
+        if not any(q[0] == question for q in questions):
+            questions.append((question, context))
 
-    if fullstops > 3:
-        while len(questions) < 10:
-            mid = random.randint(0, length - 1)
-            start, end = mid, mid
+    # start, end = 0, 0
+    # fullstops = 0
+    # for i in range(length // 2):
+    #     if passage[i] == ".":
+    #         fullstops += 1
 
-            while start > 0 and passage[start] != ".":
-                start -= 1
-            if start != 0:
-                start += 2
-            while end < length and passage[end] != ".":
-                end += 1
-            if end < length and passage[end] != ".":
-                end += 1
-            end += 1
+    # if fullstops > 3:
+    #     while len(questions) < 10:
+    #         mid = random.randint(0, length - 1)
+    #         start, end = mid, mid
 
-            if end - start < length // 10:
-                if end + 1 >= length:
-                    start -= 1
-                    while start > 0 and passage[start] != ".":
-                        start -= 1
-                    if start != 0:
-                        start += 2
-                else:
-                    while end < length and passage[end] != ".":
-                        end += 1
-                    if end < length and passage[end] != ".":
-                        end += 1
+    #         while start > 0 and passage[start] != ".":
+    #             start -= 1
+    #         if start != 0:
+    #             start += 2
+    #         while end < length and passage[end] != ".":
+    #             end += 1
+    #         if end < length and passage[end] != ".":
+    #             end += 1
+    #         end += 1
+
+    #         if end - start < length // 10:
+    #             if end + 1 >= length:
+    #                 start -= 1
+    #                 while start > 0 and passage[start] != ".":
+    #                     start -= 1
+    #                 if start != 0:
+    #                     start += 2
+    #             else:
+    #                 while end < length and passage[end] != ".":
+    #                     end += 1
+    #                 if end < length and passage[end] != ".":
+    #                     end += 1
             
-            if end - start < length // 10:
-                if end + 1 >= length:
-                    start -= 1
-                    while start > 0 and passage[start] != ".":
-                        start -= 1
-                    if start != 0:
-                        start += 2
-                else:
-                    while end < length and passage[end] != ".":
-                        end += 1
-                    if end < length and passage[end] != ".":
-                        end += 1
+    #         if end - start < length // 10:
+    #             if end + 1 >= length:
+    #                 start -= 1
+    #                 while start > 0 and passage[start] != ".":
+    #                     start -= 1
+    #                 if start != 0:
+    #                     start += 2
+    #             else:
+    #                 while end < length and passage[end] != ".":
+    #                     end += 1
+    #                 if end < length and passage[end] != ".":
+    #                     end += 1
             
-            question = RunInference(passage[start:end], tokenizer, model, device)
-            if not any(q[0] == question for q in questions):
-                questions.append((question, passage[start : end]))
-    else:
-        while len(questions) < 10:
-            start = random.randint(0, length - 1)
-            end = start
-            while end < length and end - start < length // 5:
-                end += 1
+    #         question = RunInference(passage[start:end], tokenizer, model, device)
+    #         if not any(q[0] == question for q in questions):
+    #             questions.append((question, passage[start : end]))
+    # else:
+    #     while len(questions) < 10:
+    #         start = random.randint(0, length - 1)
+    #         end = start
+    #         while end < length and end - start < length // 5:
+    #             end += 1
 
-            question = RunInference(passage[start:end], tokenizer, model, device)
-            if not any(q[0] == question for q in questions):
-                questions.append((question, passage[start:end]))
+    #         question = RunInference(passage[start:end], tokenizer, model, device)
+    #         if not any(q[0] == question for q in questions):
+    #             questions.append((question, passage[start:end]))
                 
     model.load_state_dict(torch.load("options_model_state.pt", map_location=torch.device(device)))
     model.to(device)
@@ -311,3 +330,26 @@ def GenerateMore(passage):
             output[question] = optionsDic
 
     return output
+
+def CleanText(text):
+    # Remove square bracket links
+    text = re.sub(r'\[.*?\]', '', text)
+    # Remove parentheses links
+    text = re.sub(r'\(.*?\)', '', text)
+    # Remove remaining hyperlinks
+    text = re.sub(r'http\S+', '', text)
+
+    # Remove citation brackets
+    text = re.sub(r'\[\d+\]', '', text)
+    # Remove other unwanted characters
+    text = re.sub(r'[^\w\s.,?!-]', '', text)
+
+    return text 
+
+def SplitText(text):
+    sentences = sent_tokenize(text)
+    if len(sentences) <= 3:  # If NLTK doesn't find many sentences, use word-based splitting
+        words = word_tokenize(text)
+        chunk_size = 20  # Adjust as needed
+        return [' '.join(words[i:i+chunk_size]) for i in range(0, len(words), chunk_size)]
+    return sentences
