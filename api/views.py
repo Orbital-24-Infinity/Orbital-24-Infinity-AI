@@ -110,6 +110,11 @@ def Generate(request, id):
             for file in files:
                 passage += file.data
             generatedQuestions = GenerateMore(passage)
+            
+            try:
+                check = Topic.objects.get(pk=id)
+            except Topic.DoesNotExist:
+                return Response(status=status.HTTP_404_NOT_FOUND)
 
             for questionText, options in generatedQuestions.items():
                 question = Question.objects.create(
